@@ -1,4 +1,4 @@
-![teaser_image](assets/logo2.png)
+![teaser_image](assets/logo3.png)
 
 # UniLat3D: Geometry-Appearance Unified Latents for Single-Stage 3D Generation
 
