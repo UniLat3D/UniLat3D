@@ -7,12 +7,12 @@
 
 ### [Project Page](https://guanjunwu.github.io/4dgs/index.html)| [arXiv Paper](https://arxiv.org/abs/2310.08528)
 
-[Guanjun Wu](https://guanjunwu.github.io/)`<sup>`1,2*`</sup>`, [Jiemin Fang](https://jaminfong.cn/)`<sup>`1*✉`</sup>`, [Chen Yang](https://jaminfong.cn/)`<sup>`1*`</sup>`, [Sikuang Li](https://scholar.google.com/citations?user=2dCJlg4AAAAJ&hl=zh-CN)`<sup>`1,3`</sup>`, [Taoran Yi](https://github.com/taoranyi)`<sup>`1,2`</sup>`, [Jia Lu](https://github.com/lujzz)`<sup>`1,2`</sup>`, [Zanwei Zhou](https://github.com/Zanue)`<sup>`1,3`</sup>`,
-[Jiazhong Cen](https://jumpat.github.io/jumpcat/)`<sup>`1,3`</sup>`, [Lingxi Xie](http://lingxixie.com/)`<sup>`1`</sup>`, [Xiaopeng Zhang](https://scholar.google.com/citations?user=Ud6aBAcAAAAJ&hl=zh-CN)`<sup>`1`</sup>`, [Wei Wei](https://www.eric-weiwei.com/)`<sup>`2`</sup>`, [Wenyu Liu](http://eic.hust.edu.cn/professor/liuwenyu/)`<sup>`2`</sup>`, [Xinggang Wang](https://xwcv.github.io)`<sup>`2`</sup>`, [Qi Tian](https://www.qitian1987.com/)`<sup>`3✉`</sup>`
+<a href="https://guanjunwu.github.io/">Guanjun Wu</a><sup>1,2*</sup>, <a href="https://jaminfong.cn/">Jiemin Fang</a><sup>1*✉</sup>, <a href="https://jaminfong.cn/">Chen Yang</a><sup>1*</sup>, <a href="https://scholar.google.com/citations?user=2dCJlg4AAAAJ&hl=zh-CN">Sikuang Li</a><sup>1,3</sup>, <a href="https://github.com/taoranyi">Taoran Yi</a><sup>1,2</sup>, <a href="https://github.com/lujzz">Jia Lu</a><sup>1,2</sup>, <a href="https://github.com/Zanue">Zanwei Zhou</a><sup>1,3</sup>, 
+<a href="https://jumpat.github.io/jumpcat/">Jiazhong Cen</a><sup>1,3</sup>, <a href="http://lingxixie.com/">Lingxi Xie</a><sup>1</sup>, <a href="https://scholar.google.com/citations?user=Ud6aBAcAAAAJ&hl=zh-CN">Xiaopeng Zhang</a><sup>1</sup>, <a href="https://www.eric-weiwei.com/">Wei Wei</a><sup>2</sup>, <a href="http://eic.hust.edu.cn/professor/liuwenyu/">Wenyu Liu</a><sup>2</sup>, <a href="https://xwcv.github.io">Xinggang Wang</a><sup>2</sup>, <a href="https://www.qitian1987.com/">Qi Tian</a><sup>1✉</sup>  
 
-`<sup>`1`</sup>` Huawei Inc. &emsp; `<sup>`2`</sup>` Huazhong University of Science and Technology &emsp; `<sup>`3`</sup>` Shanghai Jiaotong University
+<sup>1</sup> Huawei Inc.  <sup>2</sup> Huazhong University of Science and Technology <sup>3</sup> Shanghai Jiaotong University  
+<sup>*</sup> Equal Contributions &emsp; <sup>✉</sup> Corresponding Author
 
-`<sup>`*`</sup>` Equal Contributions &emsp; `<sup>`✉`</sup>` Corresponding Author
 
 ## News
 
