@@ -16,7 +16,7 @@
 
 ## News
 
-2025.9.30 init Repo, code would be released before 10.20
+2025.9.30 init Repo, model framework of Uni-VAE is released. 
 
 ## Awesome Concurrent/Related Works
 
