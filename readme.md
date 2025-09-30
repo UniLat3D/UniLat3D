@@ -37,5 +37,12 @@ We would like to express our sincere gratitude to Junjie Wang, Zhikuan Bao, Jinf
 ## Citation
 
 ```
-123
+@article{wu2025unilat3d,
+  title     = {UniLat3D: Geometry-Appearance Unified Latents for Single-Stage 3D Generation},
+  author    = {Wu, Guanjun and Fang, Jiemin and Yang, Chen and Li, Sikuang and Yi, Taoran and Lu, Jia and Zhou, Zanwei and Cen, Jiazhong and Xie, Lingxi and Zhang, Xiaopeng and Wei, Wei and Liu, Wenyu and Wang, Xinggang and Tian, Qi},
+  journal   = {arXiv preprint arXiv:2509.25079},
+  year      = {2025},
+  doi       = {10.48550/arXiv.2509.25079},
+  url       = {https://doi.org/10.48550/arXiv.2509.25079}
+}
 ```
