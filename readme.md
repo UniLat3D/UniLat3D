@@ -30,9 +30,6 @@
 
 Some source code of ours is borrowed from [TRELLIS](https://ingra14m.github.io/Deformable-Gaussians/), [TripoSF](https://github.com/VAST-AI-Research/TripoSF), We sincerely appreciate the excellent works of these authors.
 
-## Acknowledgement
-
-We would like to express our sincere gratitude to Junjie Wang, Zhikuan Bao, Jinfeng Yao, Lianghui Zhu for his valuable contributions and discussions on the content of our paper.
 
 ## Citation
 
