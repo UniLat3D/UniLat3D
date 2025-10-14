@@ -144,15 +144,15 @@ class UniLatGaussianDecoder(SparseTransformerBase):
         all_tensor = []
         for idx, voxel in enumerate(voxels):
             coords = torch.nonzero(voxel > 0, as_tuple=False).int()
-        if coords.shape[0] == 0:
-            print("coord is zero!")
-            default_coord = torch.tensor([[0,0,0,0]],dtype=torch.int32).to(coords)
-            default_feat = torch.zeros((1,features.shape[1]),dtype=features.dtype).to(features)
-            output_tensor = SparseTensor(coords=default_coord,feat=default_feat)
-        else:
-            feats = features[idx, :, coords[:,1], coords[:,2],coords[:,3]]
-            output_tensor = SparseTensor(coords=coords, feats = feats.permute(1,0))
-        all_tensor.append(output_tensor)
+            if coords.shape[0] == 0:
+                print("coord is zero!")
+                default_coord = torch.tensor([[0,0,0,0]],dtype=torch.int32).to(coords)
+                default_feat = torch.zeros((1,features.shape[1]),dtype=features.dtype).to(features)
+                output_tensor = SparseTensor(coords=default_coord,feats=default_feat)
+            else:
+                feats = features[idx, :, coords[:,1], coords[:,2],coords[:,3]]
+                output_tensor = SparseTensor(coords=coords, feats = feats.permute(1,0))
+            all_tensor.append(output_tensor)
         result = sparse_cat(all_tensor)
         if ret_raw_voxel:
             return result, voxels
