@@ -15,7 +15,7 @@ from PIL import Image
 from .random_utils import sphere_hammersley_sequence
 from .render_utils import render_multiview
 from ..renderers import GaussianRenderer
-from ..representations import Strivec, Gaussian#, MeshExtractResult
+from ..representations import Strivec, Gaussian, MeshExtractResult
 
 
 @torch.no_grad()
@@ -396,110 +396,59 @@ def bake_texture(
     return texture
 
 
-# def to_glb(
-    """
-    The function `to_glb` converts a generated asset represented by a mesh and appearance information
-    into a glb file format, including mesh postprocessing, parametrization, texture baking, and mesh
-    rotation.
+def to_glb(
+    app_rep: Union[Strivec, Gaussian],
+    mesh: MeshExtractResult,
+    simplify: float = 0.95,
+    fill_holes: bool = True,
+    fill_holes_max_size: float = 0.04,
+    texture_size: int = 1024,
+    debug: bool = False,
+    verbose: bool = True,
+) -> trimesh.Trimesh:
+    vertices = mesh.vertices.cpu().numpy()
+    faces = mesh.faces.cpu().numpy()
     
-    :param app_rep: The `app_rep` parameter in the `to_glb` function is the appearance representation of
-    the asset to be converted to a glb file. It can be either a `Strivec` or `Gaussian` type object
-    :type app_rep: Union[Strivec, Gaussian]
-    :param mesh: The `mesh` parameter in the `to_glb` function represents the extracted mesh data, which
-    includes the vertices and faces of the mesh. The vertices are the points in 3D space that define the
-    shape of the mesh, and the faces are the indices that connect these vertices to form triangles
-    :type mesh: MeshExtractResult
-    :param simplify: The `simplify` parameter is used to specify the ratio of faces to remove in mesh
-    simplification. A value of 0.95 would mean removing 95% of the faces in the mesh to simplify it
-    :type simplify: float
-    :param fill_holes: The `fill_holes` parameter in the `to_glb` function determines whether to fill
-    holes in the mesh. If set to `True`, it will attempt to fill any holes present in the mesh. If set
-    to `False`, it will not perform hole filling on the mesh, defaults to True
-    :type fill_holes: bool (optional)
-    :param fill_holes_max_size: The `fill_holes_max_size` parameter specifies the maximum area of a hole
-    in the mesh that should be filled. This parameter is used when filling holes in the mesh during the
-    conversion process. It helps control the size of the holes that are considered for filling
-    :type fill_holes_max_size: float
-    :param texture_size: The `texture_size` parameter in the `to_glb` function specifies the size of the
-    texture that will be applied to the mesh during the conversion process. In this case, it is set to a
-    default value of 1024, which means that the texture will have dimensions of 1024, defaults to 1024
-    :type texture_size: int (optional)
-    :param debug: The `debug` parameter in the `to_glb` function is a boolean flag that determines
-    whether to print debug information during the conversion process. If `debug` is set to `True`,
-    additional debugging information will be printed to help with troubleshooting and understanding the
-    conversion steps. If `debug` is, defaults to False
-    :type debug: bool (optional)
-    :param verbose: The `verbose` parameter in the `to_glb` function controls whether to print progress
-    information during the conversion process. If `verbose` is set to `True`, progress information will
-    be printed, and if set to `False`, progress information will not be printed, defaults to True
-    :type verbose: bool (optional)
-    :return: trimesh.Trimesh
-    """
-#     app_rep: Union[Strivec, Gaussian],
-#     mesh: MeshExtractResult,
-#     simplify: float = 0.95,
-#     fill_holes: bool = True,
-#     fill_holes_max_size: float = 0.04,
-#     texture_size: int = 1024,
-#     debug: bool = False,
-#     verbose: bool = True,
-# ) -> trimesh.Trimesh:
-#     """
-#     Convert a generated asset to a glb file.
+    # mesh postprocess
+    vertices, faces = postprocess_mesh(
+        vertices, faces,
+        simplify=simplify > 0,
+        simplify_ratio=simplify,
+        fill_holes=fill_holes,
+        fill_holes_max_hole_size=fill_holes_max_size,
+        fill_holes_max_hole_nbe=int(250 * np.sqrt(1-simplify)),
+        fill_holes_resolution=1024,
+        fill_holes_num_views=1000,
+        debug=debug,
+        verbose=verbose,
+    )
 
-#     Args:
-#         app_rep (Union[Strivec, Gaussian]): Appearance representation.
-#         mesh (MeshExtractResult): Extracted mesh.
-#         simplify (float): Ratio of faces to remove in simplification.
-#         fill_holes (bool): Whether to fill holes in the mesh.
-#         fill_holes_max_size (float): Maximum area of a hole to fill.
-#         texture_size (int): Size of the texture.
-#         debug (bool): Whether to print debug information.
-#         verbose (bool): Whether to print progress.
-#     """
-#     vertices = mesh.vertices.cpu().numpy()
-#     faces = mesh.faces.cpu().numpy()
-    
-#     # mesh postprocess
-#     vertices, faces = postprocess_mesh(
-#         vertices, faces,
-#         simplify=simplify > 0,
-#         simplify_ratio=simplify,
-#         fill_holes=fill_holes,
-#         fill_holes_max_hole_size=fill_holes_max_size,
-#         fill_holes_max_hole_nbe=int(250 * np.sqrt(1-simplify)),
-#         fill_holes_resolution=1024,
-#         fill_holes_num_views=1000,
-#         debug=debug,
-#         verbose=verbose,
-#     )
+    # parametrize mesh
+    vertices, faces, uvs = parametrize_mesh(vertices, faces)
 
-#     # parametrize mesh
-#     vertices, faces, uvs = parametrize_mesh(vertices, faces)
+    # bake texture
+    observations, extrinsics, intrinsics = render_multiview(app_rep, resolution=1024, nviews=100)
+    masks = [np.any(observation > 0, axis=-1) for observation in observations]
+    extrinsics = [extrinsics[i].cpu().numpy() for i in range(len(extrinsics))]
+    intrinsics = [intrinsics[i].cpu().numpy() for i in range(len(intrinsics))]
+    texture = bake_texture(
+        vertices, faces, uvs,
+        observations, masks, extrinsics, intrinsics,
+        texture_size=texture_size, mode='opt',
+        lambda_tv=0.01,
+        verbose=verbose
+    )
+    texture = Image.fromarray(texture)
 
-#     # bake texture
-#     observations, extrinsics, intrinsics = render_multiview(app_rep, resolution=1024, nviews=100)
-#     masks = [np.any(observation > 0, axis=-1) for observation in observations]
-#     extrinsics = [extrinsics[i].cpu().numpy() for i in range(len(extrinsics))]
-#     intrinsics = [intrinsics[i].cpu().numpy() for i in range(len(intrinsics))]
-#     texture = bake_texture(
-#         vertices, faces, uvs,
-#         observations, masks, extrinsics, intrinsics,
-#         texture_size=texture_size, mode='opt',
-#         lambda_tv=0.01,
-#         verbose=verbose
-#     )
-#     texture = Image.fromarray(texture)
-
-#     # rotate mesh (from z-up to y-up)
-#     vertices = vertices @ np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]])
-#     material = trimesh.visual.material.PBRMaterial(
-#         roughnessFactor=1.0,
-#         baseColorTexture=texture,
-#         baseColorFactor=np.array([255, 255, 255, 255], dtype=np.uint8)
-#     )
-#     mesh = trimesh.Trimesh(vertices, faces, visual=trimesh.visual.TextureVisuals(uv=uvs, material=material))
-#     return mesh
+    # rotate mesh (from z-up to y-up)
+    vertices = vertices @ np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]])
+    material = trimesh.visual.material.PBRMaterial(
+        roughnessFactor=1.0,
+        baseColorTexture=texture,
+        baseColorFactor=np.array([255, 255, 255, 255], dtype=np.uint8)
+    )
+    mesh = trimesh.Trimesh(vertices, faces, visual=trimesh.visual.TextureVisuals(uv=uvs, material=material))
+    return mesh
 
 
 def simplify_gs(
