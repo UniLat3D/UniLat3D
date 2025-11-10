@@ -138,7 +138,7 @@ class SparseFeatures2Mesh:
         vertices, faces, L_dev, colors = self.mesh_extractor(
             voxelgrid_vertices=x_nx3,
             scalar_field=sdf_d,
-            cube_idx=self.reg_c,
+            cube_idx=reg_c,
             resolution=self.res,
             beta=weights_d[:, :12],
             alpha=weights_d[:, 12:20],
@@ -191,7 +191,7 @@ class SparseFeatures2Mesh:
         vertices, faces, L_dev, colors = self.mesh_extractor(
             voxelgrid_vertices=x_nx3,
             scalar_field=sdf_d,
-            cube_idx=self.reg_c,
+            cube_idx=reg_c,
             resolution=self.res,
             beta=weights_d[:, :12],
             alpha=weights_d[:, 12:20],
