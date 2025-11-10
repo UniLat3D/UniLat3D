@@ -1,0 +1,214 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+      - feature/*
+    tags:
+      - '*'
+  
+jobs:
+  build-windows:
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13'] 
+        cuda-version: ['11.4', '11.8', '12.1', '12.4', '12.6', '12.8', '']
+    steps:
+      - uses: actions/checkout@master
+      - name: Install CUDA
+        env:
+          CUDA_VERSION: ${{ matrix.cuda-version }}
+          PYTHON_VERSION: ${{ matrix.python-version }}
+          cuda: ${{ matrix.cuda-version }}
+        if: |
+          (env.CUDA_VERSION != '') && (
+            (github.event_name == 'push' && (startsWith(github.ref, 'refs/tags')) ) || 
+            (
+              (env.PYTHON_VERSION == '3.13')
+            )
+          )
+        shell: powershell
+        run: .\tools\install_windows_cuda.ps1
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Install pep build
+        run: |
+          python -m pip install build --user
+          python -m pip install --upgrade pip twine wheel
+          python -m pip install pytest setuptools
+
+      - name: Build a windows binary wheel
+        env:
+          CUDA_VERSION: ${{ matrix.cuda-version }}
+          PYTHON_VERSION: ${{ matrix.python-version }}
+          CUMM_CUDA_VERSION: ${{ matrix.cuda-version }}
+        if: |
+          (
+            (github.event_name == 'push' && (startsWith(github.ref, 'refs/tags')) ) || 
+            (
+              (env.PYTHON_VERSION == '3.13')
+            )
+          )
+        run: |
+          # clone nvidia cuda cccl to cumm/third_party/cccl
+          if ($env:CUDA_VERSION -lt "12.0") {
+              $CCCL_BRANCH_NAME = "2.7.0"
+          }
+          elseif ($env:CUDA_VERSION -lt "12.2"){
+              $CCCL_BRANCH_NAME = "2.2.0"
+          }
+          else {
+              $CCCL_MINOR_VERSION = $env:CUDA_VERSION.split(".")[1]
+              $CCCL_BRANCH_NAME = "2.$CCCL_MINOR_VERSION.0"
+          }
+          git clone https://github.com/NVIDIA/cccl.git third_party/cccl -b v$CCCL_BRANCH_NAME
+
+          # if we use $env to set a var with empty string, this env will be deteted...
+          # f**k windows
+          $env:CUMM_CUDA_ARCH_LIST = "all"
+          $env:CUMM_DISABLE_JIT = "1"
+          pip install pccm pybind11
+          python -m build --wheel --outdir dist/ .
+        shell: powershell
+
+      - name: Publish a Python distribution to PyPI
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        run: |
+          $Env:TWINE_USERNAME = "__token__"
+          $Env:TWINE_PASSWORD = "${{ secrets.pypi_password }}"
+          twine upload dist/*
+        shell: powershell
+  
+
+  build:
+    needs: build-windows
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.12'] # this version is only used for upload.
+        cuda-version: ['114', '118', '121', '124', '126', '128', '']
+
+    steps:
+      - uses: actions/checkout@master
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pep build
+        run: |
+          python -m pip install build --user
+          python -m pip install --upgrade pip twine wheel
+          python -m pip install pytest setuptools
+
+      - name: Build a cuda wheel
+        env:
+          CUDA_VERSION: ${{ matrix.cuda-version }}
+          PYTHON_VERSION: ${{ matrix.python-version }}
+          DOCKER_IMAGE: scrin/manylinux2014-cuda:cu${{ matrix.cuda-version }}-devel-1.0.0
+          PLAT: ${{ matrix.cuda-version > '123' && 'manylinux_2_28_x86_64' || 'manylinux2014_x86_64' }}
+        if: (github.event_name == 'push' && (startsWith(github.ref, 'refs/tags')) && (env.CUDA_VERSION != '') ) || env.CUDA_VERSION == '128'
+        run: |
+          # clone nvidia cuda cccl to third_party/
+          if [ $CUDA_VERSION -lt "120" ]; then
+              CCCL_BRANCH_NAME="2.7.0"
+          elif [ $CUDA_VERSION -lt "122" ]; then
+              CCCL_BRANCH_NAME="2.2.0"
+          else
+              CCCL_MINOR_VERSION=${CUDA_VERSION:2:1}
+              CCCL_BRANCH_NAME="2.$CCCL_MINOR_VERSION.0"
+          fi
+          git clone https://github.com/NVIDIA/cccl.git third_party/cccl -b v$CCCL_BRANCH_NAME
+
+          docker run --rm -e PLAT=$PLAT -e CUMM_CUDA_VERSION=${{ matrix.cuda-version }} -v `pwd`:/io $DOCKER_IMAGE bash -c "source /etc/bashrc && /io/tools/build-wheels.sh"
+          # python -m pip install myclang -f ./dist
+          # pytest ./test
+
+      - name: Build a cpu wheel
+        env:
+          CUDA_VERSION: ${{ matrix.cuda-version }}
+          PYTHON_VERSION: ${{ matrix.python-version }}
+          DOCKER_IMAGE: scrin/manylinux2014-cuda:cu121-devel-1.0.0
+          PLAT: manylinux2014_x86_64
+        if: (github.event_name == 'push' && (startsWith(github.ref, 'refs/tags')) && (env.CUDA_VERSION == '') )
+        run: |
+          docker run --rm -e PLAT=$PLAT -e CUMM_CUDA_VERSION=${{ matrix.cuda-version }} -v `pwd`:/io $DOCKER_IMAGE bash -c "source /etc/bashrc && /io/tools/build-wheels.sh"
+
+      - name: Publish a Python distribution to PyPI
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_password }}
+
+  build-macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13'] 
+    steps:
+      - uses: actions/checkout@master
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install pep build
+        run: |
+          python -m pip install build --user
+          python -m pip install --upgrade pip twine wheel
+          python -m pip install pytest setuptools
+
+      - name: Build a Mac OS binary wheel
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        if: |
+          (
+            (github.event_name == 'push' && (startsWith(github.ref, 'refs/tags')) ) || 
+            (
+              (env.PYTHON_VERSION == '3.13')
+            )
+          )
+        run: |
+          export CUMM_DISABLE_JIT="1"
+          git clone https://github.com/bkaradzic/metal-cpp.git
+          export CUMM_APPLE_METAL_CPP_ROOT=$PWD/metal-cpp
+          pip install pccm pybind11
+          python -m build --wheel --outdir dist/ .
+      # mac os runner don't support this action
+      # - name: Publish a Python distribution to PyPI
+      #   if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     user: __token__
+      #     password: ${{ secrets.pypi_password }}
+      - name: Store the binary wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions-${{ matrix.python-version }}
+          path: dist
+
+  deploy-macos:
+    name: Publish 🐍📦 to PyPI
+    needs: build-macos
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          pattern: python-package-distributions-*
+          path: dist/
+      - name: Display structure of downloaded files
+        run: ls -R dist/
+      - name: Publish a Python distribution to PyPI
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_password }}

@@ -1,0 +1,19 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+
+find_dependency(CUDAToolkit)
+find_dependency(OpenMP)
+
+include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+check_required_components("@PROJECT_NAME@")
+
+if(DEFINED ENV{CUMM_INSTALL_PREFIX})
+  set(CUMM_INSTALL_PREFIX $ENV{CUMM_INSTALL_PREFIX})
+else()
+  # Assume we are in <install-prefix>/share/cmake/cumm/cummConfig.cmake
+  get_filename_component(CMAKE_CURRENT_LIST_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+  get_filename_component(CUMM_INSTALL_PREFIX "${CMAKE_CURRENT_LIST_DIR}/../../../" ABSOLUTE)
+endif()
+
+set(CUMM_INCLUDE_PATH
+    ${CUMM_INSTALL_PREFIX}/include)

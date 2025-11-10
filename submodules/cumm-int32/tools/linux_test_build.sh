@@ -1,0 +1,3 @@
+# sudo docker run --rm -it -e CUMM_CUDA_VERSION="114" -e PLAT=manylinux2014_x86_64 -v `pwd`:/io -v $HOME:/myhome scrin/manylinux2014-cuda:cu114-devel-1.0.0 bash -c "source /etc/bashrc && /io/tools/build-wheels-dev.sh"
+
+sudo docker run --rm -it -e CUMM_CUDA_VERSION="126" -e PLAT=manylinux_2_28_x86_64 -v `pwd`:/io -v $HOME:/myhome scrin/manylinux2014-cuda:cu126-devel-1.0.0 bash -c "source /etc/bashrc && /io/tools/build-wheels-dev.sh"
