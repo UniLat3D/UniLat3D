@@ -22,6 +22,7 @@
 
 
 ## News
+- 2025.11.10 Release the mesh decoder checkpoints and its corresponding inference code.
 
 - 2025.11.3 Release the Encoder/ 3DGS decoder / Flow model checkpoints, inference code and huggingface live demo. The mesh decoder checkpoints would be released.
 
@@ -30,7 +31,7 @@
 ## Get Started
 1. clone project:
 ```bash
-git clone https://github.com/UniLat3D/UniLat3D
+git clone --recursive https://github.com/UniLat3D/UniLat3D
 cd UniLat3D
 ```
 Then, follow [TRELLIS](https://github.com/microsoft/TRELLIS/) to prepare your environment.
@@ -58,6 +59,27 @@ python run.py --save_mp4
 python app.py
 ```
 The webpage would start.
+
+
+5. Mesh decoder inference
+
+Given a generated UniLat, one can transform it to a 3DGS or a mesh using corresponding decoders. To achieve mesh decoding, you should install spconv library and its dependencies. However, the original spconv library is known for its data [exceeding int32 range bug](https://github.com/traveller59/spconv/issues/706) when the mesh is very large while UniLat3D may synthesize high resolution meshes. To fix this issue, we have modified both the cumm and spconv libraries to skip the int32 data range exceeding check. These modified libraries are included as submodules: [spconv-int32](https://github.com/chensjtu/spconv-int32) and [cumm-int32](https://github.com/chensjtu/cumm-int32). You can install them by running the following commands:
+```bash
+cd submodules/cumm-int32; pip install -e .
+cd submodules/spconv-int32; pip install -e .
+```
+Please note that when you first run the spconv-int32, it will automatically build the spconv library. This process is time-consuming and the skipped int32 data range exceeding check is only for development purposes.
+
+To generate both 3DGS (for visualization) and mesh outputs from images:
+```bash
+python run.py --save_mp4 --formats mesh
+```
+
+To generate only mesh output without video:
+```bash
+python run.py --formats mesh
+```
+
 
 ## Contributions
 

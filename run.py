@@ -16,7 +16,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--input_dir', type=str, default="assets/images")
 parser.add_argument('--output_dir', type=str, default="demo_output/")
-parser.add_argument("--pipeline_path", type=str, default="/data_hdd3/users/yangchen/trellis/guanjunwu/UniLat_ckpts/ckpts")
+parser.add_argument("--pipeline_path", type=str, default="SmallGuanjun/UniLat3D")
 parser.add_argument("--resolution",type=int,default=1024)
 parser.add_argument("--num_samples",type=int,default=-1)
 parser.add_argument("--cfg_strength",type=float,default=5)
@@ -76,8 +76,6 @@ for i in image_paths:
             texture_size=int(args.texture_size),      # Size of the texture used for the GLB
         )
         glb.export(f"{output_dir}/{i.split('.')[0]}.glb")
-
-    break # cy: remove this later
 
 
 

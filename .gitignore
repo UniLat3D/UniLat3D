@@ -3,3 +3,4 @@ demo_output/
 splat_unilat/splat_files/*
 trained_models/
 external/
+.vscode/
