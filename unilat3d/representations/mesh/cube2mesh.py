@@ -111,15 +111,29 @@ class SparseFeatures2Mesh:
         sdf += self.sdf_bias
         v_attrs = [sdf, deform, color] if self.use_color else [sdf, deform]
         v_pos, v_attrs, reg_loss = sparse_cube2verts(coords, torch.cat(v_attrs, dim=-1), training=training)
-        v_attrs_d = get_dense_attrs(v_pos, v_attrs, res=self.res+1, sdf_init=True)
-        weights_d = get_dense_attrs(coords, weights, res=self.res, sdf_init=False)
+        
+        res_v = self.res + 1
+        v_attrs_d, v_pos_dilate = get_sparse_attrs(v_pos, v_attrs, res=res_v, sdf_init=True)
+        weights_d, coords_dilate = get_sparse_attrs(coords, weights, res=self.res, sdf_init=False)
+
         if self.use_color:
             sdf_d, deform_d, colors_d = v_attrs_d[..., 0], v_attrs_d[..., 1:4], v_attrs_d[..., 4:]
         else:
             sdf_d, deform_d = v_attrs_d[..., 0], v_attrs_d[..., 1:4]
             colors_d = None
             
-        x_nx3 = get_defomed_verts(self.reg_v, deform_d, self.res)
+        x_nx3 = get_defomed_verts(v_pos_dilate, deform_d, self.res)
+        x_nx3 = torch.cat((x_nx3, torch.ones((1, 3), dtype=x_nx3.dtype, device=x_nx3.device) * 0.5))
+        sdf_d = torch.cat((sdf_d, torch.ones((1), dtype=sdf_d.dtype, device=sdf_d.device)))
+        
+        mask_reg_c_sparse = (v_pos_dilate[..., 0] * res_v + v_pos_dilate[..., 1]) * res_v + v_pos_dilate[..., 2]
+        reg_c_sparse = (coords_dilate[..., 0] * res_v + coords_dilate[..., 1]) * res_v + coords_dilate[..., 2]
+        cube_corners_bias = (cube_corners[:, 0] * res_v + cube_corners[:, 1]) * res_v + cube_corners[:, 2]            
+        reg_c_value = (reg_c_sparse.unsqueeze(1) + cube_corners_bias.unsqueeze(0).cuda()).reshape(-1)
+        reg_c = torch.searchsorted(mask_reg_c_sparse, reg_c_value)
+        exact_match_mask = mask_reg_c_sparse[reg_c] == reg_c_value
+        reg_c[exact_match_mask == 0] = len(mask_reg_c_sparse)
+        reg_c = reg_c.reshape(-1, 8)
         
         vertices, faces, L_dev, colors = self.mesh_extractor(
             voxelgrid_vertices=x_nx3,
@@ -150,15 +164,29 @@ class SparseFeatures2Mesh:
         sdf += self.sdf_bias
         v_attrs = [sdf, deform, color] if self.use_color else [sdf, deform]
         v_pos, v_attrs, reg_loss = sparse_cube2verts(coords, torch.cat(v_attrs, dim=-1), training=training)
-        v_attrs_d = get_dense_attrs(v_pos, v_attrs, res=self.res+1, sdf_init=True)
-        weights_d = get_dense_attrs(coords, weights, res=self.res, sdf_init=False)
+        
+        res_v = self.res + 1
+        v_attrs_d, v_pos_dilate = get_sparse_attrs(v_pos, v_attrs, res=res_v, sdf_init=True)
+        weights_d, coords_dilate = get_sparse_attrs(coords, weights, res=self.res, sdf_init=False)
+
         if self.use_color:
             sdf_d, deform_d, colors_d = v_attrs_d[..., 0], v_attrs_d[..., 1:4], v_attrs_d[..., 4:]
         else:
             sdf_d, deform_d = v_attrs_d[..., 0], v_attrs_d[..., 1:4]
             colors_d = None
             
-        x_nx3 = get_defomed_verts(self.reg_v, deform_d, self.res)
+        x_nx3 = get_defomed_verts(v_pos_dilate, deform_d, self.res)
+        x_nx3 = torch.cat((x_nx3, torch.ones((1, 3), dtype=x_nx3.dtype, device=x_nx3.device) * 0.5))
+        sdf_d = torch.cat((sdf_d, torch.ones((1), dtype=sdf_d.dtype, device=sdf_d.device)))
+        
+        mask_reg_c_sparse = (v_pos_dilate[..., 0] * res_v + v_pos_dilate[..., 1]) * res_v + v_pos_dilate[..., 2]
+        reg_c_sparse = (coords_dilate[..., 0] * res_v + coords_dilate[..., 1]) * res_v + coords_dilate[..., 2]
+        cube_corners_bias = (cube_corners[:, 0] * res_v + cube_corners[:, 1]) * res_v + cube_corners[:, 2]            
+        reg_c_value = (reg_c_sparse.unsqueeze(1) + cube_corners_bias.unsqueeze(0).cuda()).reshape(-1)
+        reg_c = torch.searchsorted(mask_reg_c_sparse, reg_c_value)
+        exact_match_mask = mask_reg_c_sparse[reg_c] == reg_c_value
+        reg_c[exact_match_mask == 0] = len(mask_reg_c_sparse)
+        reg_c = reg_c.reshape(-1, 8)
         
         vertices, faces, L_dev, colors = self.mesh_extractor(
             voxelgrid_vertices=x_nx3,

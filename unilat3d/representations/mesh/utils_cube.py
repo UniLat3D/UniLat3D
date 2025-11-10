@@ -22,6 +22,12 @@ def construct_voxel_grid(coords):
     cubes = inverse_indices.reshape(-1, 8)
     return verts_unique, cubes
 
+def get_sparse_attrs(coords : torch.Tensor, feats : torch.Tensor, res : int, sdf_init=True):
+    verts = coords
+    verts, masks = torch.unique(verts, dim=0, return_inverse=True)
+    feats_sparse = torch.zeros((len(verts), feats.shape[-1]), device=feats.device, dtype=feats.dtype)
+    feats_sparse[masks] = feats
+    return feats_sparse, verts
 
 def cubes_to_verts(num_verts, cubes, value, reduce='mean'):
     """
