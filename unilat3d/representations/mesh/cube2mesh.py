@@ -52,7 +52,7 @@ class MeshExtractResult:
         v_normals.scatter_add_(0, i2[..., None].repeat(1, 3), face_normals)
 
         v_normals = torch.nn.functional.normalize(v_normals, dim=1)
-        return v_normals   
+        return v_normals
 
 
 class SparseFeatures2Mesh:
@@ -65,9 +65,6 @@ class SparseFeatures2Mesh:
         self.res = res
         self.mesh_extractor = FlexiCubes(device=device)
         self.sdf_bias = -1.0 / res
-        verts, cube = construct_dense_grid(self.res, self.device)
-        self.reg_c = cube.to(self.device)
-        self.reg_v = verts.to(self.device)
         self.use_color = use_color
         self._calc_layout()
     
@@ -157,6 +154,7 @@ class SparseFeatures2Mesh:
             mesh.tsdf_s = v_attrs[:, 0]
         return mesh
 
+    @torch.no_grad()
     def forward_flexicubes(self, cubefeats : SparseTensor, training=False):
         coords = cubefeats.coords[:, 1:]
         feats = cubefeats.feats
@@ -164,7 +162,7 @@ class SparseFeatures2Mesh:
         sdf, deform, color, weights = [self.get_layout(feats, name) for name in ['sdf', 'deform', 'color', 'weights']]
         sdf += self.sdf_bias
         v_attrs = [sdf, deform, color] if self.use_color else [sdf, deform]
-        v_pos, v_attrs, reg_loss = sparse_cube2verts(coords, torch.cat(v_attrs, dim=-1), training=training)
+        v_pos, v_attrs, _ = sparse_cube2verts(coords, torch.cat(v_attrs, dim=-1), training=False)
         
         res_v = self.res + 1
         v_attrs_d, v_pos_dilate = get_sparse_attrs(v_pos, v_attrs, res=res_v, sdf_init=True)
