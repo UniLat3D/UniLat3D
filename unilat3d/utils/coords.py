@@ -8,7 +8,7 @@ def find_features(valid_coords, h_coords, h_feats):
     M = h_coords.size(0)
     C = h_feats.size(1)
 
-    both = torch.cat([valid_coords, h_coords], dim=0)
+    both = torch.cat([h_coords, valid_coords], dim=0)
     uniq, inv = torch.unique(both, dim=0, return_inverse=True)
 
     inv_h = inv[:M]
