@@ -144,6 +144,7 @@ class SparseFeatures2Mesh:
             alpha=weights_d[:, 12:20],
             gamma_f=weights_d[:, 20],
             voxelgrid_colors=colors_d,
+            cube_index_map=coords_dilate,
             training=training)
         
         mesh = MeshExtractResult(vertices=vertices, faces=faces, vertex_attrs=colors, res=self.res)
@@ -197,6 +198,7 @@ class SparseFeatures2Mesh:
             alpha=weights_d[:, 12:20],
             gamma_f=weights_d[:, 20],
             voxelgrid_colors=colors_d,
+            cube_index_map=coords_dilate,
             training=training)
 
         occ = transform_vertices_to_occ(vertices, self.res)
