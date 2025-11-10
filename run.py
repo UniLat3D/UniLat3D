@@ -8,7 +8,6 @@ import imageio
 from PIL import Image
 from unilat3d.pipelines import UniLatImageTo3DPipeline
 from unilat3d.utils import render_utils, postprocessing_utils
-from time import time
 import argparse
 # Load a pipeline from a model folder or a Hugging Face model hub.
 
@@ -17,8 +16,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--input_dir', type=str, default="assets/images")
 parser.add_argument('--output_dir', type=str, default="demo_output/")
-# parser.add_argument("--pipeline_path", type=str, default="SmallGuanjun/UniLat3D")
-parser.add_argument("--pipeline_path", type=str, default="/data_hdd3/users/yangchen/trellis/guanjunwu/UniLat_ckpts/ckpts") # cy: remove this later
+parser.add_argument("--pipeline_path", type=str, default="/data_hdd3/users/yangchen/trellis/guanjunwu/UniLat_ckpts/ckpts")
 parser.add_argument("--resolution",type=int,default=1024)
 parser.add_argument("--num_samples",type=int,default=-1)
 parser.add_argument("--cfg_strength",type=float,default=5)
@@ -26,11 +24,8 @@ parser.add_argument("--simplify",type=float,default=0.95)
 parser.add_argument("--texture_size",type=float,default=1024)
 
 parser.add_argument("--steps",type=int,default=50)
-parser.add_argument("--pipeline_name",type=str, default="ours")
 
 parser.add_argument('--formats', action='append', help='return formats, can be gaussian and mesh', default=['gaussian'])
-parser.add_argument('--world_size', type=int, default=1)
-parser.add_argument('--local_rank', type=int, default=0)
 parser.add_argument('--save_mp4',  action="store_true")
 
 
@@ -45,7 +40,6 @@ image_paths = os.listdir(input_dir)
 os.makedirs(output_dir,exist_ok=True)
 os.makedirs(os.path.join(f"{output_dir}/gaussian_video/"),exist_ok=True)
 os.makedirs(os.path.join(f"{output_dir}/gaussian_gif/"),exist_ok=True)
-save_mesh = True
 image_paths.sort()
 if args.num_samples != -1:
     image_paths = image_paths[:args.num_samples]
@@ -73,8 +67,15 @@ for i in image_paths:
         imageio.mimsave(f"{output_dir}/gaussian_gif/{i.split('.')[0]}.gif", video, fps=60)
 
     if 'mesh' in args.formats:
-        mesh = outputs['mesh'][0]
-        mesh.export(f"{output_dir}/mesh/{i.split('.')[0]}.ply")
+        # GLB files can be extracted from the outputs
+        glb = postprocessing_utils.to_glb(
+            outputs['gaussian'][0],
+            outputs['mesh'][0],
+            # Optional parameters
+            simplify=args.simplify,          # Ratio of triangles to remove in the simplification process
+            texture_size=int(args.texture_size),      # Size of the texture used for the GLB
+        )
+        glb.export(f"{output_dir}/{i.split('.')[0]}.glb")
 
     break # cy: remove this later
 
