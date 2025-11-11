@@ -6,7 +6,7 @@ __attributes = {
     'SparseStructureFlowModel': 'unified_latent_flow',
     'UniLatEncoder': 'unified_latent_vae',
     'UniLatGaussianDecoder': 'unified_latent_vae',
-    'SLatMeshDecoderV3U': 'unified_latent_vae',
+    'SLatMeshDecoderUniLat3D': 'unified_latent_vae',
 }
 
 __submodules = []

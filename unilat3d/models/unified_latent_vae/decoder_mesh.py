@@ -263,7 +263,7 @@ class SLatMeshDecoder(SparseTransformerBase):
         else:
             return self.to_representation(h), []
     
-class SLatMeshDecoderV3U(nn.Module):
+class SLatMeshDecoderUniLat3D(nn.Module):
     def __init__(
         self,
         resolution: int,
