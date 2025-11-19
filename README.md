@@ -99,3 +99,12 @@ Some source code of ours is borrowed from [TRELLIS](https://github.com/microsoft
 }
 ```
 
+## LICENSE
+
+This project is licensed under the Apache License 2.0 for all original code.
+
+However, it includes third-party components that are distributed under their own
+licenses. These components retain their original licenses. Use of these
+third-party libraries is subject to the terms of their respective licenses.
+
+
