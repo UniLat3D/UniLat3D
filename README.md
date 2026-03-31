@@ -1,6 +1,12 @@
 ![logo](assets/logo3.png)
+  <div align="center">
+    
+  <h1 align="center">
+  Geometry-Appearance Unified Latents<br>
+  for Single-Stage 3D Generation
+  </h1>
 
-# UniLat3D: Geometry-Appearance Unified Latents for Single-Stage 3D Generation
+## CVPR 2026 Findings
 
 ### [Project Page](https://unilat3d.github.io/) | [arXiv Paper](https://arxiv.org/abs/2509.25079) | [Huggingface Live Demo](https://huggingface.co/spaces/UniLat3D/UniLat3D)
 
@@ -15,6 +21,7 @@
 
 <sup>*</sup>Equal contributions.  <sup>✉</sup>Corresponding author.
 
+  </div>
 
 ![teaser_image](assets/teaser_image.png)
 
